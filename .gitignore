@@ -1,2 +1,2 @@
-target
-Cargo.lock
+solana-address-analysis/Cargo.lock
+solana-address-analysis/target/.rustc_info.json
