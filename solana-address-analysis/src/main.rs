@@ -6,6 +6,8 @@ use solana_transaction_status::EncodedTransaction;
 use solana_transaction_status::UiMessage;
 use solana_transaction_status::UiTransactionEncoding;
 use std::str::FromStr;
+use std::collections::HashMap;
+
 fn main() {
     // let url = "https://friktion.rpcpool.com/07afafb9df9b278fb600cadb4111";
     let url = "https://api.mainnet-beta.solana.com";
@@ -20,12 +22,20 @@ fn main() {
     let res = client.get_signatures_for_address(&contract_id).unwrap();
     println!("transactions fetched: {:?}", res.len());
 
+    let mut signer_count = HashMap::new();
+
     for i in 0..1000 {
-        println!("{:?}", get_txn_info(&client, &res[i].signature))
+        let signers = get_txn_signers(&client, &res[i].signature);
+        for signer in signers {
+            let count = signer_count.entry(signer).or_insert(0);
+            *count +=1;
+        }
     }
+
+    println!("{:?}", signer_count);
 }
 
-fn get_txn_info(client: &RpcClient, txn_id: &String) -> Vec<String> {
+fn get_txn_signers(client: &RpcClient, txn_id: &String) -> Vec<String> {
     // println!("[LOG] Getting signers for transaction: {:?}", res[0].signature);
     let mut result = Vec::new();
 
