@@ -31,8 +31,10 @@ fn main() {
             *count +=1;
         }
     }
+    let mut count_vec: Vec<_> = signer_count.iter().collect();
+    count_vec.sort_by(|a, b| b.1.cmp(a.1));
 
-    println!("{:?}", signer_count);
+    println!("{:?}", count_vec);
 }
 
 fn get_txn_signers(client: &RpcClient, txn_id: &String) -> Vec<String> {
