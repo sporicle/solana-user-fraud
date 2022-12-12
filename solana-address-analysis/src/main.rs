@@ -7,9 +7,9 @@ use solana_transaction_status::UiMessage;
 use solana_transaction_status::UiTransactionEncoding;
 use std::str::FromStr;
 use std::collections::HashMap;
+use indicatif::ProgressBar;
 
 fn main() {
-    // let url = "https://friktion.rpcpool.com/07afafb9df9b278fb600cadb4111";
     let url = "https://api.mainnet-beta.solana.com";
 
     // Contract ID for Lifinity Protocol
@@ -18,27 +18,29 @@ fn main() {
     let commitment_config = CommitmentConfig::processed();
     let client = RpcClient::new_with_commitment(url, commitment_config);
 
-    println!("[LOG] Getting recent signatures for {}", contract_id);
+    println!("[LOG] Getting recent signatures for contract: {}", contract_id);
     let res = client.get_signatures_for_address(&contract_id).unwrap();
-    println!("transactions fetched: {:?}", res.len());
+    println!("[LOG] Transactions fetched: {:?}", res.len());
+    let bar = ProgressBar::new(res.len().try_into().unwrap());
 
     let mut signer_count = HashMap::new();
-
-    for i in 0..1000 {
-        let signers = get_txn_signers(&client, &res[i].signature);
+    for i in 0..res.len() {
+        bar.inc(1);
+        let (signers, timestamp) = get_txn_signers(&client, &res[i].signature);
         for signer in signers {
-            let count = signer_count.entry(signer).or_insert(0);
+            let (count, _timestamp) = signer_count.entry(signer).or_insert((0, timestamp));
             *count +=1;
         }
     }
+    bar.finish();
     let mut count_vec: Vec<_> = signer_count.iter().collect();
-    count_vec.sort_by(|a, b| b.1.cmp(a.1));
+    count_vec.sort_by(|a, b| b.1.0.cmp(&a.1.0));
 
     println!("{:?}", count_vec);
+    println!("[LOG] Number of unique signers in the last {} transactions: {}", res.len(), count_vec.len());
 }
 
-fn get_txn_signers(client: &RpcClient, txn_id: &String) -> Vec<String> {
-    // println!("[LOG] Getting signers for transaction: {:?}", res[0].signature);
+fn get_txn_signers(client: &RpcClient, txn_id: &String) -> (Vec<String>, i32) {
     let mut result = Vec::new();
 
     let txn = client
@@ -47,9 +49,6 @@ fn get_txn_signers(client: &RpcClient, txn_id: &String) -> Vec<String> {
             UiTransactionEncoding::JsonParsed,
         )
         .unwrap();
-
-    println!("{:?}", txn);
-    println!("[LOG] List of signers for transaction");
     match txn.transaction.transaction {
         EncodedTransaction::Json(value) => match value.message {
             UiMessage::Parsed(parsed_msg) => {
@@ -68,5 +67,5 @@ fn get_txn_signers(client: &RpcClient, txn_id: &String) -> Vec<String> {
         }
     };
 
-    result
+    (result, 1) 
 }
