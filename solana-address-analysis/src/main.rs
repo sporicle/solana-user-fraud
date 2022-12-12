@@ -26,10 +26,11 @@ fn main() {
     let mut signer_count = HashMap::new();
     for i in 0..res.len() {
         bar.inc(1);
-        let (signers, timestamp) = get_txn_signers(&client, &res[i].signature);
+        let (signers, ts) = get_txn_signers(&client, &res[i].signature);
         for signer in signers {
-            let (count, _timestamp) = signer_count.entry(signer).or_insert((0, timestamp));
+            let (count, timestamps) = signer_count.entry(signer).or_insert((0, Vec::new()));
             *count +=1;
+            timestamps.push(ts);
         }
     }
     bar.finish();
@@ -38,11 +39,13 @@ fn main() {
 
     println!("{:?}", count_vec);
     println!("[LOG] Number of unique signers in the last {} transactions: {}", res.len(), count_vec.len());
+    println!("{:?}", analyze_timestamps(&count_vec[0].1.1));
+    println!("{:?}", analyze_timestamps(&count_vec[1].1.1));
+    println!("{:?}", analyze_timestamps(&count_vec[2].1.1));
 }
 
 fn get_txn_signers(client: &RpcClient, txn_id: &String) -> (Vec<String>, i32) {
     let mut result = Vec::new();
-
     let txn = client
         .get_transaction(
             &Signature::from_str(&txn_id).unwrap(),
@@ -56,7 +59,7 @@ fn get_txn_signers(client: &RpcClient, txn_id: &String) -> (Vec<String>, i32) {
                     if account.signer {
                         result.push(account.pubkey);
                     }
-                }
+                };
             }
             UiMessage::Raw(_raw_msg) => {
                 println!("Currently only support parsed messages")
@@ -67,5 +70,22 @@ fn get_txn_signers(client: &RpcClient, txn_id: &String) -> (Vec<String>, i32) {
         }
     };
 
-    (result, 1) 
+    match txn.block_time {
+        Some(timestamp) => {
+            (result, timestamp.try_into().unwrap()) 
+        }
+        None => {
+            (result, -1) 
+        }
+    }
+}
+
+fn analyze_timestamps(times: &Vec<i32>) -> Vec<i32>{
+    let mut result = Vec::new();
+    
+    for i in 1..times.len() {
+        result.push(times[i] - times[i-1]);
+    }
+
+    result
 }
