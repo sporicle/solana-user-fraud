@@ -17,7 +17,7 @@ fn main() {
     let commitment_config = CommitmentConfig::processed();
     let client = RpcClient::new_with_commitment(url, commitment_config);
 
-    analyze_user_timezone("FWMkWWVvSz7cVkhovkVHL59TDPtX78X23bA4frTbjkCA", &client);
+    analyze_user_timezone("EQTKNpQkgK7JhaoKxteaM5Jhn2QzWcurYXvk4QUsDtCi", &client);
 
     // // Contract ID for Lifinity Protocol
     // let contract_id = Pubkey::from_str("AvtfUvU3byPXgp6Dpw3mgKB2BbVwQvGyry9KeMzD9BLc").unwrap();
@@ -106,6 +106,10 @@ fn analyze_user_timezone(pubkey: &str, client: &RpcClient) -> i32 {
     let user_pubkey = Pubkey::from_str(pubkey).unwrap();
     let res = client.get_signatures_for_address(&user_pubkey).unwrap();
     let mut usage_counts: HashMap<u32, usize> = HashMap::new();
+    // fill usage_counts with 0
+    for i in 0..24 {
+        usage_counts.insert(i, 0);
+    }
 
     // time analysis.
     for i in 1..res.len() {
@@ -132,5 +136,50 @@ fn analyze_user_timezone(pubkey: &str, client: &RpcClient) -> i32 {
     let json_output = serde_json::to_string_pretty(&formated_vec).unwrap();
     println!("{}", json_output);
 
-    1
+
+    // Find the 3 highest action hours.
+    let mut highest_hours = Vec::new();
+    for i in 0..24 {
+        if highest_hours.len() < 3 {
+            highest_hours.push(formated_vec[i]["actions"].as_i64().unwrap());
+        } else {
+            let mut min_index = 0;
+            for j in 0..3 {
+                if highest_hours[j] < highest_hours[min_index] {
+                    min_index = j;
+                }
+            }
+            if formated_vec[i]["actions"].as_i64().unwrap() > highest_hours[min_index] {
+                highest_hours[min_index] = formated_vec[i]["actions"].as_i64().unwrap();
+            }
+        }
+    }
+    println!("Highest hours: {:?}", highest_hours);
+    
+    let low_activity_threshold = ((highest_hours[0]+highest_hours[1]+highest_hours[2])/3)/3;
+    println!("Low activity threshold: {}", low_activity_threshold);
+
+    // Calculate if there are 6 continuous hours of low activity.
+    let mut sleep_hours = 0;
+    let mut sleep_start = 0;
+    let mut is_real_user = false;
+
+    for i in 0..24 {
+        if formated_vec[i]["actions"].as_i64().unwrap() < low_activity_threshold {
+            if sleep_hours == 0 {
+                sleep_start = i;
+            }
+            sleep_hours += 1;
+            if sleep_hours == 6 {
+                println!("Sleep hours: {} - {}", sleep_start, i);
+                is_real_user = true;
+            }
+        } else {
+            sleep_hours = 0;
+        }
+    }
+
+    println!("Sleep Start: {}", sleep_start);
+    println!("Is real user: {}", is_real_user);
+    return is_real_user as i32;
 }
