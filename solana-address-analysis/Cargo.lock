@@ -2662,6 +2662,7 @@ dependencies = [
 name = "solana-address-analysis"
 version = "0.1.0"
 dependencies = [
+ "chrono",
  "indicatif 0.17.2",
  "solana-client",
  "solana-sdk",
