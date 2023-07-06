@@ -17,7 +17,7 @@ fn main() {
     let commitment_config = CommitmentConfig::processed();
     let client = RpcClient::new_with_commitment(url, commitment_config);
 
-    analyze_user("FWMkWWVvSz7cVkhovkVHL59TDPtX78X23bA4frTbjkCA", &client);
+    analyze_user_timezone("FWMkWWVvSz7cVkhovkVHL59TDPtX78X23bA4frTbjkCA", &client);
 
     // // Contract ID for Lifinity Protocol
     // let contract_id = Pubkey::from_str("AvtfUvU3byPXgp6Dpw3mgKB2BbVwQvGyry9KeMzD9BLc").unwrap();
@@ -101,12 +101,8 @@ fn analyze_timestamps(times: &Vec<i32>) -> Vec<i32> {
 
     result
 }
-struct NameValue {
-    name: u32,
-    value: usize,
-}
 
-fn analyze_user(pubkey: &str, client: &RpcClient) -> i32 {
+fn analyze_user_timezone(pubkey: &str, client: &RpcClient) -> i32 {
     let user_pubkey = Pubkey::from_str(pubkey).unwrap();
     let res = client.get_signatures_for_address(&user_pubkey).unwrap();
     let mut usage_counts: HashMap<u32, usize> = HashMap::new();
