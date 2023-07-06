@@ -2664,6 +2664,8 @@ version = "0.1.0"
 dependencies = [
  "chrono",
  "indicatif 0.17.2",
+ "serde",
+ "serde_json",
  "solana-client",
  "solana-sdk",
  "solana-transaction-status",

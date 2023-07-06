@@ -1,4 +1,7 @@
+use chrono::{DateTime, Timelike, Utc};
 use indicatif::ProgressBar;
+use serde::Serialize;
+use serde_json::{json, Value};
 use solana_client::rpc_client::RpcClient;
 use solana_sdk::commitment_config::CommitmentConfig;
 use solana_sdk::pubkey::Pubkey;
@@ -8,7 +11,6 @@ use solana_transaction_status::UiMessage;
 use solana_transaction_status::UiTransactionEncoding;
 use std::collections::HashMap;
 use std::str::FromStr;
-use chrono::{DateTime, Utc, Timelike};
 
 fn main() {
     let url = "https://api.mainnet-beta.solana.com";
@@ -28,7 +30,7 @@ fn main() {
     // println!("[LOG] Transactions fetched: {:?}", res.len());
     // let bar = ProgressBar::new(res.len().try_into().unwrap());
 
-    // // key: signer | value: [signing timestamps] 
+    // // key: signer | value: [signing timestamps]
     // let mut signer_count = HashMap::new();
     // // for i in 0..res.len() {
     // for i in 0..2 {
@@ -74,7 +76,7 @@ fn get_txn_signers(client: &RpcClient, txn_id: &String) -> (Vec<String>, i32) {
                         result.push(account.pubkey);
                     }
                 }
-            },
+            }
             UiMessage::Raw(_raw_msg) => {
                 println!("Currently only support parsed messages")
             }
@@ -99,13 +101,17 @@ fn analyze_timestamps(times: &Vec<i32>) -> Vec<i32> {
 
     result
 }
+struct NameValue {
+    name: u32,
+    value: usize,
+}
 
 fn analyze_user(pubkey: &str, client: &RpcClient) -> i32 {
     let user_pubkey = Pubkey::from_str(pubkey).unwrap();
-    let res = client.get_signatures_for_address(&user_pubkey).unwrap();    
+    let res = client.get_signatures_for_address(&user_pubkey).unwrap();
     let mut usage_counts: HashMap<u32, usize> = HashMap::new();
 
-  // time analysis
+    // time analysis.
     for i in 1..res.len() {
         let unix_time = res[i].block_time.unwrap();
         let utc_datetime: DateTime<Utc> = DateTime::from_utc(
@@ -119,6 +125,16 @@ fn analyze_user(pubkey: &str, client: &RpcClient) -> i32 {
     let mut count_vec: Vec<_> = usage_counts.iter().collect();
     count_vec.sort_by_key(|&(number, _count)| number);
 
-    println!("{:?}",count_vec);
+    // format into json.
+    let mut formated_vec: Vec<HashMap<&str, Value>> = Vec::new();
+    for (number, count) in count_vec {
+        let mut entry = HashMap::new();
+        entry.insert("hour", json!(number));
+        entry.insert("actions", json!(count));
+        formated_vec.push(entry);
+    }
+    let json_output = serde_json::to_string_pretty(&formated_vec).unwrap();
+    println!("{}", json_output);
+
     1
 }

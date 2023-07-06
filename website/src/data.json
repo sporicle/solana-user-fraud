@@ -1,0 +1,98 @@
+[
+    {
+      "actions": 51,
+      "hour": 0
+    },
+    {
+      "hour": 1,
+      "actions": 26
+    },
+    {
+      "actions": 18,
+      "hour": 2
+    },
+    {
+      "actions": 44,
+      "hour": 3
+    },
+    {
+      "hour": 4,
+      "actions": 61
+    },
+    {
+      "hour": 5,
+      "actions": 89
+    },
+    {
+      "hour": 6,
+      "actions": 67
+    },
+    {
+      "actions": 52,
+      "hour": 7
+    },
+    {
+      "hour": 8,
+      "actions": 41
+    },
+    {
+      "actions": 70,
+      "hour": 9
+    },
+    {
+      "hour": 10,
+      "actions": 17
+    },
+    {
+      "actions": 24,
+      "hour": 11
+    },
+    {
+      "hour": 12,
+      "actions": 15
+    },
+    {
+      "hour": 13,
+      "actions": 4
+    },
+    {
+      "hour": 14,
+      "actions": 5
+    },
+    {
+      "hour": 15,
+      "actions": 23
+    },
+    {
+      "hour": 16,
+      "actions": 10
+    },
+    {
+      "hour": 17,
+      "actions": 65
+    },
+    {
+      "hour": 18,
+      "actions": 50
+    },
+    {
+      "actions": 71,
+      "hour": 19
+    },
+    {
+      "actions": 37,
+      "hour": 20
+    },
+    {
+      "actions": 41,
+      "hour": 21
+    },
+    {
+      "actions": 44,
+      "hour": 22
+    },
+    {
+      "actions": 74,
+      "hour": 23
+    }
+  ]
