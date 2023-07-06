@@ -136,7 +136,6 @@ fn analyze_user_timezone(pubkey: &str, client: &RpcClient) -> i32 {
     let json_output = serde_json::to_string_pretty(&formated_vec).unwrap();
     println!("{}", json_output);
 
-
     // Find the 3 highest action hours.
     let mut highest_hours = Vec::new();
     for i in 0..24 {
@@ -155,8 +154,8 @@ fn analyze_user_timezone(pubkey: &str, client: &RpcClient) -> i32 {
         }
     }
     println!("Highest hours: {:?}", highest_hours);
-    
-    let low_activity_threshold = ((highest_hours[0]+highest_hours[1]+highest_hours[2])/3)/3;
+
+    let low_activity_threshold = ((highest_hours[0] + highest_hours[1] + highest_hours[2]) / 3) / 3;
     println!("Low activity threshold: {}", low_activity_threshold);
 
     // Calculate if there are 6 continuous hours of low activity.
