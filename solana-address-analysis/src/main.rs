@@ -1,3 +1,4 @@
+use chrono::NaiveDate;
 use chrono::{DateTime, Timelike, Utc};
 use indicatif::ProgressBar;
 use serde::Serialize;
@@ -17,7 +18,8 @@ fn main() {
     let commitment_config = CommitmentConfig::processed();
     let client = RpcClient::new_with_commitment(url, commitment_config);
 
-    analyze_user_timezone("EQTKNpQkgK7JhaoKxteaM5Jhn2QzWcurYXvk4QUsDtCi", &client);
+    // analyze_user_timezone("EQTKNpQkgK7JhaoKxteaM5Jhn2QzWcurYXvk4QUsDtCi", &client);
+    analyze_user_timezone("FWMkWWVvSz7cVkhovkVHL59TDPtX78X23bA4frTbjkCA", &client);
 
     // // Contract ID for Lifinity Protocol
     // let contract_id = Pubkey::from_str("AvtfUvU3byPXgp6Dpw3mgKB2BbVwQvGyry9KeMzD9BLc").unwrap();
@@ -106,6 +108,8 @@ fn analyze_user_timezone(pubkey: &str, client: &RpcClient) -> i32 {
     let user_pubkey = Pubkey::from_str(pubkey).unwrap();
     let res = client.get_signatures_for_address(&user_pubkey).unwrap();
     let mut usage_counts: HashMap<u32, usize> = HashMap::new();
+    let mut date_counts: HashMap<NaiveDate, usize> = HashMap::new();
+
     // fill usage_counts with 0
     for i in 0..24 {
         usage_counts.insert(i, 0);
@@ -119,9 +123,17 @@ fn analyze_user_timezone(pubkey: &str, client: &RpcClient) -> i32 {
             Utc,
         );
         let hour = utc_datetime.hour();
-        let count = usage_counts.entry(hour).or_insert(0);
-        *count += 1;
+        let date = utc_datetime.date_naive();
+
+        let date_count = date_counts.entry(date).or_insert(0);
+        *date_count += 1;
+        let usage_count = usage_counts.entry(hour).or_insert(0);
+        *usage_count += 1;
     }
+    let mut date_vec: Vec<(&NaiveDate, &usize)> = date_counts.iter().collect();
+    let mut sorted_date_vec: Vec<(&NaiveDate, &usize)> = date_vec.clone();
+    sorted_date_vec.sort_by_key(|&(date, actions)| !actions);
+
     let mut count_vec: Vec<_> = usage_counts.iter().collect();
     count_vec.sort_by_key(|&(number, _count)| number);
 
@@ -179,6 +191,7 @@ fn analyze_user_timezone(pubkey: &str, client: &RpcClient) -> i32 {
     }
 
     println!("Sleep Start: {}", sleep_start);
+    println!("Max txns in a day: {}", sorted_date_vec[0].1);
     println!("Is real user: {}", is_real_user);
     return is_real_user as i32;
 }
